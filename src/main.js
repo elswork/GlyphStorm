@@ -2,11 +2,30 @@ import { WebGPURenderer } from './webgpu_renderer.js';
 import { GameLogic } from './game_logic.js';
 import { AIManager } from './ai_manager.js';
 import { AudioManager } from './audio_manager.js';
+import { dictionaries } from './dictionaries.js';
 
 const renderer = new WebGPURenderer('gpu-canvas');
 const game = new GameLogic();
 const ai = new AIManager();
 const audio = new AudioManager();
+
+let currentLang = 'es';
+game.setDictionary(dictionaries[currentLang]);
+
+window.setLanguage = (lang) => {
+    currentLang = lang;
+    game.setDictionary(dictionaries[lang]);
+
+    // Update UI highlights
+    const buttons = document.querySelectorAll('#language-selector button');
+    buttons.forEach(btn => {
+        if (btn.getAttribute('onclick').includes(lang)) {
+            btn.style.borderColor = '#00ffff';
+        } else {
+            btn.style.borderColor = '#555';
+        }
+    });
+};
 
 let lastTime = 0;
 

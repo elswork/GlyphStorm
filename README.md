@@ -6,6 +6,8 @@ GlyphStorm is a high-performance, web-based typing defense game that leverages *
 
 -   **High-Performance Rendering**: Utilizes WebGPU for hardware-accelerated 2D/3D graphics.
 -   **AI Adaptive Difficulty**: Analyze typing patterns (latency, accuracy, speed) to dynamically adjust game difficulty using LiteRT.
+-   **Grammatical Mode (Castellano)**: Practice Spanish orthography with words containing `b/v`, `h`, accents, and `ñ`.
+-   **Multilingual Support**: Switch between Castellano and English from the main menu.
 -   **AI-Triggered Text-to-Speech**: Words are read aloud when they reach a specific height, which changes based on your performance (AI threshold).
 -   **WebGPU Particle System**: Satisfying explosions when destroying enemies, calculated on the GPU.
 -   **Dynamic Themes**: Screen colors shift between Flow (Teal), Normal (Gray), and Struggling (Red) based on AI analysis.
@@ -65,7 +67,18 @@ GlyphStorm is a high-performance, web-based typing defense game that leverages *
 4.  If an enemy reaches the bottom, you lose points.
 5.  The AI will monitor your performance and adjust the "Flow State" to keep you challenged.
 
-## 🚧 Future Work
+## 🚀 Deployment
+
+The project is configured to deploy automatically to **GitHub Pages** whenever you push to the `main` branch.
+
+### How it works:
+- **GitHub Action**: Located in `.github/workflows/deploy.yml`.
+- **Vite Config**: `vite.config.js` is set to use relative paths (`base: './'`) to ensure assets load correctly on GitHub Pages subpaths.
+
+To enable it on GitHub:
+1. Go to your repository **Settings**.
+2. Navigate to **Pages** in the sidebar.
+3. Under **Build and deployment > Source**, select **GitHub Actions**.
 
 -   Full integration of a trained LiteRT model for behavior classification.
 -   Enhanced particle effects and shaders.

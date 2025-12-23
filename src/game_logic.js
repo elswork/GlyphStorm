@@ -7,7 +7,8 @@ export class GameLogic {
         this.enemies = [];
         this.particles = [];
         this.startTime = 0;
-        this.wordList = ["HELLO", "WORLD", "WEBGPU", "LITERT", "AI", "CODE", "FAST", "TYPING", "GAME", "DEFENSE"];
+        this.wordList = ["START"]; // Default
+        this.bossWordList = ["ANTIGRAVITY"];
         this.currentTarget = null;
         this.startInput = ""; // Buffer for "START" typing
         this.restartInput = ""; // Buffer for "RESTART" typing
@@ -88,6 +89,7 @@ export class GameLogic {
     handleInput(key) {
         if (key.length !== 1) return;
         const char = key.toUpperCase();
+        const rawChar = key; // Keep original for accented matching if needed
 
         if (this.state === "MENU") {
             const target = "START";
@@ -146,6 +148,11 @@ export class GameLogic {
                 console.log("Mistake!");
             }
         }
+    }
+
+    setDictionary(dict) {
+        this.wordList = dict.words;
+        this.bossWordList = dict.bossWords;
     }
 
     startGame() {

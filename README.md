@@ -1,6 +1,8 @@
-# GlyphStorm: WebGPU Adaptive Defense
+# ⚡ GLYPHSTORM: Digital Orthography Defense
 
-GlyphStorm is a high-performance, web-based typing defense game that leverages **WebGPU** for rendering and **LiteRT** (formerly TensorFlow Lite) for AI-driven adaptive difficulty.
+**GlyphStorm** no es solo un juego de mecanografía; es un campo de batalla lingüístico impulsado por **WebGPU** e inteligencia artificial. En un futuro donde los datos se corrompen y las palabras son tu única arma, tu misión es purificar el flujo de información mediante la precisión gramatical.
+
+Domina el **Castellano** enfrentándote a tormentas de glifos que desafían tu conocimiento de las reglas ortográficas: tildes traicioneras, la dicotomía b/v, y la mística de la letra Ñ. Todo mientras una IA analiza cada una de tus pulsaciones en tiempo real para ajustar el caos a tu nivel de maestría.
 
 ## 🚀 Features
 

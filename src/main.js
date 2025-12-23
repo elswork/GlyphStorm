@@ -1,10 +1,12 @@
 import { WebGPURenderer } from './webgpu_renderer.js';
 import { GameLogic } from './game_logic.js';
 import { AIManager } from './ai_manager.js';
+import { AudioManager } from './audio_manager.js';
 
 const renderer = new WebGPURenderer('gpu-canvas');
 const game = new GameLogic();
 const ai = new AIManager();
+const audio = new AudioManager();
 
 let lastTime = 0;
 
@@ -22,10 +24,22 @@ async function init() {
             window.speechSynthesis.speak(utterance);
         };
 
+        game.onDestroy = (x, y) => {
+            renderer.addExplosion(x, y);
+        };
+
         // Input handling
         window.addEventListener('keydown', (e) => {
+            audio.init(); // Resume context if needed
+            audio.playClick();
+
+            const prevState = game.state;
             game.handleInput(e.key);
-            ai.recordKeystroke(e.key, Math.random() * 200); // Mock latency for now
+            ai.recordKeystroke(e.key, 100); // Latency mock
+
+            if (prevState === "MENU" && game.state === "PLAYING") {
+                audio.startMusic();
+            }
         });
 
         requestAnimationFrame(gameLoop);
@@ -49,6 +63,18 @@ async function gameLoop(timestamp) {
 
         document.getElementById('ai-state').innerText = aiState;
         game.ttsThreshold = ttsThreshold;
+        game.difficultChars = ai.getDifficultChars();
+        audio.updateBPM(game.score);
+
+        // Dynamic Themes: Update background color based on threshold
+        // Flow (0.75) -> Cyan/Blue, Struggling (0.25) -> Red, Normal (0.5) -> Gray
+        if (ttsThreshold > 0.6) {
+            renderer.clearColor = { r: 0.05, g: 0.1, b: 0.15, a: 1.0 }; // Deep Teal
+        } else if (ttsThreshold < 0.4) {
+            renderer.clearColor = { r: 0.2, g: 0.05, b: 0.05, a: 1.0 }; // Deep Red
+        } else {
+            renderer.clearColor = { r: 0.1, g: 0.1, b: 0.1, a: 1.0 }; // Standard Gray
+        }
     }
 
     const state = game.getState();
@@ -61,7 +87,6 @@ async function gameLoop(timestamp) {
     const centerDisplay = document.getElementById('center-display');
     if (state.state === "MENU") {
         centerDisplay.classList.remove('hidden');
-        // Show typing progress
         const typed = state.startInput || "";
         const target = "START";
         let html = "";
@@ -75,6 +100,16 @@ async function gameLoop(timestamp) {
         document.getElementById('target-word').innerHTML = html;
     } else {
         centerDisplay.classList.add('hidden');
+    }
+
+    // Toggle Game Over Screen
+    const gameOverDisplay = document.getElementById('game-over');
+    if (state.state === "GAMEOVER") {
+        gameOverDisplay.classList.remove('hidden');
+        document.getElementById('final-score').innerText = state.score;
+        document.getElementById('final-wpm').innerText = game.wpm; // Simplistic
+    } else {
+        gameOverDisplay.classList.add('hidden');
     }
 
     // Update Enemy Labels

@@ -5,6 +5,9 @@ export class WebGPURenderer {
         this.device = null;
         this.context = null;
         this.format = navigator.gpu.getPreferredCanvasFormat();
+        this.particles = [];
+        this.maxParticles = 1000;
+        this.clearColor = { r: 0.1, g: 0.1, b: 0.1, a: 1.0 };
     }
 
     async init() {
@@ -27,6 +30,7 @@ export class WebGPURenderer {
         });
 
         await this.initPipeline();
+        await this.initParticlePipeline();
         console.log("WebGPU Initialized");
     }
 
@@ -123,6 +127,96 @@ export class WebGPURenderer {
         });
     }
 
+    async initParticlePipeline() {
+        const shaderModule = this.device.createShaderModule({
+            label: 'Particle Shader',
+            code: `
+                struct Uniforms {
+                    screenSize: vec2f,
+                }
+                @group(0) @binding(0) var<uniform> uniforms: Uniforms;
+
+                struct VertexOutput {
+                    @builtin(position) position: vec4f,
+                    @location(0) color: vec4f,
+                }
+
+                struct ParticleInput {
+                    @location(0) pos: vec2f,
+                    @location(1) color: vec4f,
+                }
+
+                @vertex
+                fn vs(@builtin(vertex_index) vi: u32, p: ParticleInput) -> VertexOutput {
+                    var out: VertexOutput;
+                    let size = 0.005; // Fixed particle size
+                    var quad = array<vec2f, 4>(
+                        vec2f(-1.0, -1.0), vec2f( 1.0, -1.0),
+                        vec2f(-1.0,  1.0), vec2f( 1.0,  1.0)
+                    );
+                    
+                    let pPos = p.pos * 2.0 - 1.0;
+                    let vPos = quad[vi] * size;
+                    out.position = vec4f(pPos.x + vPos.x, -(pPos.y + vPos.y), 0.0, 1.0);
+                    out.color = p.color;
+                    return out;
+                }
+
+                @fragment
+                fn fs(in: VertexOutput) -> @location(0) vec4f {
+                    return in.color;
+                }
+            `
+        });
+
+        this.particlePipeline = this.device.createRenderPipeline({
+            label: 'Particle Pipeline',
+            layout: 'auto',
+            vertex: {
+                module: shaderModule,
+                entryPoint: 'vs',
+                buffers: [{
+                    arrayStride: 6 * 4, // 2 (pos) + 4 (color) floats
+                    stepMode: 'instance',
+                    attributes: [
+                        { shaderLocation: 0, offset: 0, format: 'float32x2' },
+                        { shaderLocation: 1, offset: 8, format: 'float32x4' },
+                    ]
+                }]
+            },
+            fragment: {
+                module: shaderModule,
+                entryPoint: 'fs',
+                targets: [{
+                    format: this.format,
+                    blend: {
+                        color: { srcFactor: 'src-alpha', dstFactor: 'one', operation: 'add' },
+                        alpha: { srcFactor: 'one', dstFactor: 'one', operation: 'add' }
+                    }
+                }]
+            },
+            primitive: { topology: 'triangle-strip' }
+        });
+
+        this.particleBuffer = this.device.createBuffer({
+            size: this.maxParticles * 6 * 4,
+            usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST,
+        });
+    }
+
+    addExplosion(x, y, color = [1, 0.5, 0, 1]) {
+        for (let i = 0; i < 50; i++) {
+            if (this.particles.length >= this.maxParticles) this.particles.shift();
+            this.particles.push({
+                x, y,
+                vx: (Math.random() - 0.5) * 0.01,
+                vy: (Math.random() - 0.5) * 0.01,
+                life: 1.0,
+                color: [...color]
+            });
+        }
+    }
+
     render(gameState) {
         if (!this.device || !this.pipeline) return;
 
@@ -152,11 +246,11 @@ export class WebGPURenderer {
                 const offset = i * 7;
                 instanceData[offset + 0] = e.x; // x
                 instanceData[offset + 1] = e.y; // y
-                instanceData[offset + 2] = 0.1; // width (relative to screen 0-1)
-                instanceData[offset + 3] = 0.05; // height
-                instanceData[offset + 4] = 1.0; // r
-                instanceData[offset + 5] = 0.0; // g
-                instanceData[offset + 6] = 0.0; // b
+                instanceData[offset + 2] = e.isBoss ? 0.2 : 0.1; // width
+                instanceData[offset + 3] = e.isBoss ? 0.08 : 0.05; // height
+                instanceData[offset + 4] = e.isBoss ? 1.0 : 1.0; // r
+                instanceData[offset + 5] = e.isBoss ? 0.84 : 0.0; // g
+                instanceData[offset + 6] = e.isBoss ? 0.0 : 0.0; // b
             }
             this.device.queue.writeBuffer(this.instanceBuffer, 0, instanceData);
         }
@@ -168,7 +262,7 @@ export class WebGPURenderer {
             colorAttachments: [
                 {
                     view: textureView,
-                    clearValue: { r: 0.1, g: 0.1, b: 0.1, a: 1.0 },
+                    clearValue: this.clearColor,
                     loadOp: "clear",
                     storeOp: "store",
                 },
@@ -182,6 +276,38 @@ export class WebGPURenderer {
             passEncoder.setVertexBuffer(0, this.instanceBuffer);
             passEncoder.draw(6, instanceCount);
         }
+
+        // Render Particles
+        if (this.particles.length > 0) {
+            // Update particles (normally compute shader would do this, but for simplicity let's do it on CPU for now)
+            // In a real WebGPU app, we'd use a compute pass.
+            this.particles = this.particles.filter(p => {
+                p.x += p.vx;
+                p.y += p.vy;
+                p.life -= 0.01;
+                p.color[3] = p.life;
+                return p.life > 0;
+            });
+
+            if (this.particles.length > 0) {
+                const particleData = new Float32Array(this.particles.length * 6);
+                for (let i = 0; i < this.particles.length; i++) {
+                    const p = this.particles[i];
+                    particleData[i * 6 + 0] = p.x;
+                    particleData[i * 6 + 1] = p.y;
+                    particleData[i * 6 + 2] = p.color[0];
+                    particleData[i * 6 + 3] = p.color[1];
+                    particleData[i * 6 + 4] = p.color[2];
+                    particleData[i * 6 + 5] = p.color[3];
+                }
+                this.device.queue.writeBuffer(this.particleBuffer, 0, particleData);
+
+                passEncoder.setPipeline(this.particlePipeline);
+                passEncoder.setVertexBuffer(0, this.particleBuffer);
+                passEncoder.draw(4, this.particles.length);
+            }
+        }
+
         passEncoder.end();
         this.device.queue.submit([commandEncoder.finish()]);
     }

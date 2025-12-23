@@ -90,7 +90,23 @@
         </div>
         <div id="enemy-layer"
             style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none;"></div>
+
+        <div id="game-over" class="hidden" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: flex; flex-direction: column; justify-content: center; align-items: center; pointer-events: auto;">
+            <h1 style="font-size: 5rem; color: #ff0000; text-shadow: 0 0 20px #ff0000; margin: 0;">GAME OVER</h1>
+            <div id="final-stats" style="font-size: 1.5rem; text-align: center; margin: 30px 0;">
+                <div>Final Score: <span id="final-score">0</span></div>
+                <div>Avg WPM: <span id="final-wpm">0</span></div>
+                <div>AI Flow Rating: <span id="final-rating">Normal</span></div>
+            </div>
+            <div style="font-size: 2rem; color: #00ffff; animation: blink 1s infinite;">Type "RESTART" to play again</div>
+        </div>
     </div>
+
+    <style>
+        @keyframes blink {
+            50% { opacity: 0; }
+        }
+    </style>
 
     <script>
         window.onerror = function (msg, url, line, col, error) {

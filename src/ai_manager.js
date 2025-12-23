@@ -3,6 +3,7 @@ export class AIManager {
         this.model = null;
         this.isReady = false;
         this.typingHistory = [];
+        this.charLatencies = {}; // key: char, value: [latencies]
     }
 
     async init() {
@@ -15,7 +16,12 @@ export class AIManager {
     }
 
     recordKeystroke(char, latency) {
-        this.typingHistory.push({ char, latency, timestamp: Date.now() });
+        const c = char.toUpperCase();
+        if (!this.charLatencies[c]) this.charLatencies[c] = [];
+        this.charLatencies[c].push(latency);
+        if (this.charLatencies[c].length > 10) this.charLatencies[c].shift();
+
+        this.typingHistory.push({ char: c, latency, timestamp: Date.now() });
         if (this.typingHistory.length > 50) {
             this.typingHistory.shift();
         }
@@ -47,5 +53,15 @@ export class AIManager {
         } else {
             return { state: "Normal", ttsThreshold: 0.5 };
         }
+    }
+
+    getDifficultChars() {
+        const difficult = [];
+        for (const char in this.charLatencies) {
+            const latencies = this.charLatencies[char];
+            const avg = latencies.reduce((a, b) => a + b, 0) / latencies.length;
+            if (avg > 250) difficult.push(char);
+        }
+        return difficult;
     }
 }

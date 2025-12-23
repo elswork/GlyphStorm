@@ -10,8 +10,14 @@ export class GameLogic {
         this.wordList = ["HELLO", "WORLD", "WEBGPU", "LITERT", "AI", "CODE", "FAST", "TYPING", "GAME", "DEFENSE"];
         this.currentTarget = null;
         this.startInput = ""; // Buffer for "START" typing
+        this.restartInput = ""; // Buffer for "RESTART" typing
         this.ttsThreshold = 0.5;
-        this.onSpeak = null; // Callback for TTS
+        this.onSpeak = null;
+        this.onDestroy = null; // Callback for particle explosions
+        this.health = 100;
+        this.wpmHistory = [];
+        this.difficultChars = [];
+        this.bossWordList = ["ANTIGRAVITY", "OPTIMIZATION", "RECONSTRUCTION", "MULTITHREADING", "ARCHITECTURE"];
     }
 
     init() {
@@ -19,15 +25,27 @@ export class GameLogic {
     }
 
     spawnEnemy() {
-        const word = this.wordList[Math.floor(Math.random() * this.wordList.length)];
+        const isBoss = Math.random() < 0.1 && this.score > 100;
+        let word;
+
+        if (isBoss) {
+            word = this.bossWordList[Math.floor(Math.random() * this.bossWordList.length)];
+        } else {
+            // Smart selection: prioritize words starting with difficult characters
+            const smartPool = this.wordList.filter(w => this.difficultChars.includes(w[0]));
+            const finalPool = smartPool.length > 0 && Math.random() < 0.5 ? smartPool : this.wordList;
+            word = finalPool[Math.floor(Math.random() * finalPool.length)];
+        }
+
         this.enemies.push({
             word: word,
             x: Math.random() * 0.8 + 0.1,
             y: -0.1,
-            speed: 0.0005,
+            speed: isBoss ? 0.0003 : 0.0005,
             active: true,
             matchedIndex: 0,
-            spoken: false
+            spoken: false,
+            isBoss: isBoss
         });
     }
 
@@ -39,7 +57,10 @@ export class GameLogic {
             enemy.y += enemy.speed * dt;
             if (enemy.y > 1.0) {
                 enemy.active = false;
-                this.score -= 10;
+                this.health -= 20; // Lose health
+                if (this.health <= 0) {
+                    this.state = "GAMEOVER";
+                }
                 if (this.currentTarget === enemy) {
                     this.currentTarget = null;
                 }
@@ -82,6 +103,19 @@ export class GameLogic {
             return;
         }
 
+        if (this.state === "GAMEOVER") {
+            const target = "RESTART";
+            if (char === target[this.restartInput.length]) {
+                this.restartInput += char;
+                if (this.restartInput === "RESTART") {
+                    this.startGame();
+                }
+            } else {
+                this.restartInput = "";
+            }
+            return;
+        }
+
         if (this.state !== "PLAYING") return;
 
         if (!this.currentTarget) {
@@ -99,6 +133,9 @@ export class GameLogic {
             if (char === nextChar) {
                 this.currentTarget.matchedIndex++;
                 if (this.currentTarget.matchedIndex >= this.currentTarget.word.length) {
+                    if (this.onDestroy) {
+                        this.onDestroy(this.currentTarget.x, this.currentTarget.y);
+                    }
                     this.currentTarget.active = false;
                     this.currentTarget = null;
                     this.score += 10;
@@ -114,8 +151,11 @@ export class GameLogic {
     startGame() {
         this.state = "PLAYING";
         this.score = 0;
+        this.health = 100;
         this.enemies = [];
         this.startInput = "";
+        this.restartInput = "";
+        this.wpmHistory = [];
         this.startTime = Date.now();
         this.spawnEnemy();
         console.log("Game Started!");

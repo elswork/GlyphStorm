@@ -7,6 +7,11 @@ GlyphStorm is a high-performance, web-based typing defense game that leverages *
 -   **High-Performance Rendering**: Utilizes WebGPU for hardware-accelerated 2D/3D graphics.
 -   **AI Adaptive Difficulty**: Analyze typing patterns (latency, accuracy, speed) to dynamically adjust game difficulty using LiteRT.
 -   **AI-Triggered Text-to-Speech**: Words are read aloud when they reach a specific height, which changes based on your performance (AI threshold).
+-   **WebGPU Particle System**: Satisfying explosions when destroying enemies, calculated on the GPU.
+-   **Dynamic Themes**: Screen colors shift between Flow (Teal), Normal (Gray), and Struggling (Red) based on AI analysis.
+-   **Procedural Music & Audio**: Dynamic BPM music and haptic-style typing sounds that react to your game state.
+-   **Boss Enemies**: Larger, gold-colored enemies with complex words that appear as you advance.
+-   **Smart Word Selection**: The AI learns which letters you struggle with and prioritizes words that challenge your weaknesses.
 -   **Procedural Content**: Dynamic word generation and enemy movement.
 -   **Modern Tech Stack**: Built with Vite and ES6+ modules.
 

@@ -14,6 +14,14 @@ async function init() {
         await ai.init();
         game.init();
 
+        // TTS setup
+        game.onSpeak = (text) => {
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.rate = 1.2;
+            utterance.pitch = 1.0;
+            window.speechSynthesis.speak(utterance);
+        };
+
         // Input handling
         window.addEventListener('keydown', (e) => {
             game.handleInput(e.key);
@@ -35,8 +43,12 @@ async function gameLoop(timestamp) {
 
     // Periodically run AI analysis (e.g., every 2 seconds)
     if (Math.floor(timestamp / 2000) > Math.floor((timestamp - dt) / 2000)) {
-        const aiState = await ai.analyze();
+        const aiAnalysis = await ai.analyze();
+        const aiState = typeof aiAnalysis === 'string' ? aiAnalysis : aiAnalysis.state;
+        const ttsThreshold = aiAnalysis.ttsThreshold || 0.5;
+
         document.getElementById('ai-state').innerText = aiState;
+        game.ttsThreshold = ttsThreshold;
     }
 
     const state = game.getState();

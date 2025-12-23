@@ -10,6 +10,8 @@ export class GameLogic {
         this.wordList = ["HELLO", "WORLD", "WEBGPU", "LITERT", "AI", "CODE", "FAST", "TYPING", "GAME", "DEFENSE"];
         this.currentTarget = null;
         this.startInput = ""; // Buffer for "START" typing
+        this.ttsThreshold = 0.5;
+        this.onSpeak = null; // Callback for TTS
     }
 
     init() {
@@ -24,7 +26,8 @@ export class GameLogic {
             y: -0.1,
             speed: 0.0005,
             active: true,
-            matchedIndex: 0
+            matchedIndex: 0,
+            spoken: false
         });
     }
 
@@ -40,6 +43,14 @@ export class GameLogic {
                 if (this.currentTarget === enemy) {
                     this.currentTarget = null;
                 }
+            }
+
+            // Check for TTS trigger
+            if (!enemy.spoken && enemy.y >= this.ttsThreshold) {
+                if (this.onSpeak) {
+                    this.onSpeak(enemy.word);
+                }
+                enemy.spoken = true;
             }
         }
 

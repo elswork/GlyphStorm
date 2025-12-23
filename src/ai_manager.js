@@ -41,11 +41,11 @@ export class AIManager {
         // Fast & Inconsistent -> Stressed/Spamming
 
         if (avgLatency < 150 && variance < 2000) {
-            return "Flow State (High)";
+            return { state: "Flow State (High)", ttsThreshold: 0.75 };
         } else if (avgLatency > 300) {
-            return "Struggling (Low)";
+            return { state: "Struggling (Low)", ttsThreshold: 0.25 };
         } else {
-            return "Normal";
+            return { state: "Normal", ttsThreshold: 0.5 };
         }
     }
 }

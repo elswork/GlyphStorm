@@ -20,6 +20,63 @@
             height: 100vh;
         }
 
+        /* Mobile specific styles */
+        #mobile-input {
+            position: absolute;
+            opacity: 0;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        #mobile-tap-hint {
+            display: none;
+            position: absolute;
+            bottom: 20px;
+            width: 100%;
+            text-align: center;
+            color: #00ffff;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            animation: pulse 2s infinite;
+        }
+
+        @media (max-width: 768px) {
+            #mobile-tap-hint {
+                display: block;
+            }
+
+            .logo-svg {
+                width: 90vw;
+                height: auto;
+            }
+
+            #target-word {
+                font-size: 2.5rem;
+            }
+
+            #game-description {
+                font-size: 0.9rem;
+                padding: 0 20px;
+            }
+
+            #stats {
+                font-size: 1rem;
+            }
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 0.5;
+            }
+
+            50% {
+                opacity: 1;
+            }
+        }
+
         #ui-layer {
             position: absolute;
             top: 0;
@@ -77,11 +134,14 @@
 <body>
     <canvas id="gpu-canvas"></canvas>
     <div id="ui-layer">
+        <input type="text" id="mobile-input" autocomplete="off"
+            style="position: absolute; opacity: 0; pointer-events: none; z-index: -1;">
         <div id="stats">
             <div>Score: <span id="score">0</span></div>
             <div>WPM: <span id="wpm">0</span></div>
             <div>Difficulty: <span id="difficulty">Normal</span></div>
         </div>
+        <div id="mobile-tap-hint">Tap anywhere to type</div>
 
         <style>
             .logo-container {

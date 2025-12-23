@@ -48,18 +48,38 @@ async function init() {
         };
 
         // Input handling
+        const mobileInput = document.getElementById('mobile-input');
+
+        // Focus input on any click to ensure keyboard pops up on mobile
+        document.addEventListener('click', () => {
+            mobileInput.focus();
+        });
+
         window.addEventListener('keydown', (e) => {
-            audio.init(); // Resume context if needed
+            if (e.target === mobileInput) return; // Let input event handle it
+            processInput(e.key);
+        });
+
+        mobileInput.addEventListener('input', (e) => {
+            const char = e.data;
+            if (char) {
+                processInput(char);
+            }
+            mobileInput.value = ""; // Clear for next char
+        });
+
+        function processInput(key) {
+            audio.init();
             audio.playClick();
 
             const prevState = game.state;
-            game.handleInput(e.key);
-            ai.recordKeystroke(e.key, 100); // Latency mock
+            game.handleInput(key);
+            ai.recordKeystroke(key, 100);
 
             if (prevState === "MENU" && game.state === "PLAYING") {
                 audio.startMusic();
             }
-        });
+        }
 
         requestAnimationFrame(gameLoop);
     } catch (err) {

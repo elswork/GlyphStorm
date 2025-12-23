@@ -7,7 +7,8 @@ export class GameLogic {
         this.enemies = [];
         this.particles = [];
         this.startTime = 0;
-        this.wordList = ["START"]; // Default
+        this.basicWords = ["START"];
+        this.advancedWords = [];
         this.bossWordList = ["ANTIGRAVITY"];
         this.currentTarget = null;
         this.startInput = ""; // Buffer for "START" typing
@@ -26,23 +27,37 @@ export class GameLogic {
     }
 
     spawnEnemy() {
-        const isBoss = Math.random() < 0.1 && this.score > 100;
+        const isBoss = Math.random() < 0.1 && this.score > 150;
         let word;
+
+        // Difficulty levels: 0-50 (Basic), 50-150 (Mixed), 150+ (Advanced)
+        let pool;
+        if (this.score < 50) {
+            pool = this.basicWords;
+        } else if (this.score < 150) {
+            pool = Math.random() < 0.6 ? this.basicWords : this.advancedWords;
+        } else {
+            pool = Math.random() < 0.3 ? this.basicWords : this.advancedWords;
+        }
 
         if (isBoss) {
             word = this.bossWordList[Math.floor(Math.random() * this.bossWordList.length)];
         } else {
-            // Smart selection: prioritize words starting with difficult characters
-            const smartPool = this.wordList.filter(w => this.difficultChars.includes(w[0]));
-            const finalPool = smartPool.length > 0 && Math.random() < 0.5 ? smartPool : this.wordList;
+            // Smart selection: prioritize words starting with difficult characters if they exist in the pool
+            const smartPool = pool.filter(w => this.difficultChars.includes(w[0]));
+            const finalPool = smartPool.length > 0 && Math.random() < 0.5 ? smartPool : pool;
             word = finalPool[Math.floor(Math.random() * finalPool.length)];
         }
+
+        // Speed ramp: starts at 0.0002, increases with score
+        const baseSpeed = 0.0002 + Math.min(this.score * 0.000003, 0.0008);
+        const speed = isBoss ? baseSpeed * 0.6 : baseSpeed;
 
         this.enemies.push({
             word: word,
             x: Math.random() * 0.8 + 0.1,
             y: -0.1,
-            speed: isBoss ? 0.0003 : 0.0005,
+            speed: speed,
             active: true,
             matchedIndex: 0,
             spoken: false,
@@ -151,7 +166,8 @@ export class GameLogic {
     }
 
     setDictionary(dict) {
-        this.wordList = dict.words;
+        this.basicWords = dict.basicWords;
+        this.advancedWords = dict.advancedWords;
         this.bossWordList = dict.bossWords;
     }
 

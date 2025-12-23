@@ -1,8 +1,12 @@
 export const dictionaries = {
     es: {
         name: "Castellano",
-        words: [
-            "ACCIÓN", "BARCO", "VARCO", "HERRADURA", "AVIÓN", "HABLAR", "VIVIR", "BEBER",
+        basicWords: [
+            "BARCO", "CASA", "SOL", "PAN", "MESA", "SILLA", "PERRO", "GATO", "LUNA", "MAR",
+            "FLOR", "BOLA", "TREN", "PISO", "RAMA", "PESO", "PASO", "DEDO", "PULPO"
+        ],
+        advancedWords: [
+            "ACCIÓN", "BARCO", "HERRADURA", "AVIÓN", "HABLAR", "VIVIR", "BEBER",
             "ORTOGRAFÍA", "PINGÜINO", "CIGÜEÑA", "ÁRBOL", "CORAZÓN", "MÚSICA", "TELÉFONO",
             "EXCEPCIÓN", "OBJETIVO", "PROYECTO", "INNOVACIÓN", "TECNOLOGÍA", "MAÑANA", "ESPAÑA"
         ],
@@ -13,8 +17,12 @@ export const dictionaries = {
     },
     en: {
         name: "English",
-        words: [
-            "ACTION", "SHIP", "PLANE", "SPEAK", "LIVE", "DRINK", "TREEE", "HEART", "MUSIC", "PHONE",
+        basicWords: [
+            "SHIP", "HOME", "SUN", "DOG", "CAT", "MOON", "SEA", "FISH", "BIRD", "TREE",
+            "RING", "BALL", "BOOK", "DESK", "HAND", "FOOT", "ROCK", "HILL"
+        ],
+        advancedWords: [
+            "ACTION", "PLANE", "SPEAK", "LIVE", "DRINK", "HEART", "MUSIC", "PHONE",
             "EXCEPTION", "OBJECTIVE", "PROJECT", "INNOVATION", "TECHNOLOGY", "MORNING", "SPAIN"
         ],
         bossWords: [

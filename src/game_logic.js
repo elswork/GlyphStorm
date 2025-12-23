@@ -49,8 +49,8 @@ export class GameLogic {
             word = finalPool[Math.floor(Math.random() * finalPool.length)];
         }
 
-        // Speed ramp: starts at 0.00015, increases slowly with score
-        const baseSpeed = 0.00015 + Math.min(this.score * 0.000001, 0.0008);
+        // Speed ramp: starts at 0.0001, increases very slowly with score
+        const baseSpeed = 0.0001 + Math.min(this.score * 0.0000005, 0.0008);
         const speed = isBoss ? baseSpeed * 0.6 : baseSpeed;
 
         this.enemies.push({
@@ -94,9 +94,9 @@ export class GameLogic {
         // Cleanup inactive enemies
         this.enemies = this.enemies.filter(e => e.active);
 
-        // Randomly spawn new enemies (lower initial chance and slower ramp-up)
-        const spawnChance = 0.008 + (this.score * 0.00005);
-        if (Math.random() < spawnChance && this.enemies.length < 6) {
+        // Randomly spawn new enemies (very low initial chance and slow ramp-up)
+        const spawnChance = 0.005 + (this.score * 0.00002);
+        if (Math.random() < spawnChance && this.enemies.length < 3) {
             this.spawnEnemy();
         }
     }

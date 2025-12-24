@@ -8,6 +8,7 @@ export class WebGPURenderer {
         this.particles = [];
         this.maxParticles = 1000;
         this.clearColor = { r: 0.1, g: 0.1, b: 0.1, a: 1.0 };
+        this.startTime = Date.now();
     }
 
     async init() {
@@ -31,6 +32,7 @@ export class WebGPURenderer {
 
         await this.initPipeline();
         await this.initParticlePipeline();
+        await this.initBackgroundPipeline();
         console.log("WebGPU Initialized");
     }
 
@@ -124,6 +126,89 @@ export class WebGPURenderer {
         this.instanceBuffer = this.device.createBuffer({
             size: this.instanceBufferCapacity * 7 * 4,
             usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST,
+        });
+    }
+
+    async initBackgroundPipeline() {
+        const shaderModule = this.device.createShaderModule({
+            label: 'Background Shader',
+            code: `
+                struct Uniforms {
+                    screenSize: vec2f,
+                    time: f32,
+                    padding: f32,
+                }
+                @group(0) @binding(0) var<uniform> uniforms: Uniforms;
+
+                struct VertexOutput {
+                    @builtin(position) position: vec4f,
+                    @location(0) uv: vec2f,
+                }
+
+                @vertex
+                fn vs(@builtin(vertex_index) vi: u32) -> VertexOutput {
+                    var pos = array<vec2f, 4>(
+                        vec2f(-1.0, -1.0), vec2f( 1.0, -1.0),
+                        vec2f(-1.0,  1.0), vec2f( 1.0,  1.0)
+                    );
+                    var out: VertexOutput;
+                    out.position = vec4f(pos[vi], 0.0, 1.0);
+                    out.uv = pos[vi] * 0.5 + 0.5;
+                    return out;
+                }
+
+                @fragment
+                fn fs(in: VertexOutput) -> @location(0) vec4f {
+                    let uv = in.uv;
+                    let t = uniforms.time * 0.0005;
+                    
+                    // Animated digital grid / starfield effect
+                    var color = vec3f(0.0);
+                    
+                    // Base grid
+                    let grid = sin(uv.x * 40.0 + t) * sin(uv.y * 40.0 - t * 0.5);
+                    color += vec3f(0.0, 0.2, 0.3) * smoothstep(0.9, 1.0, grid) * 0.2;
+                    
+                    // Moving scanlines
+                    let scanline = sin(uv.y * 100.0 - t * 10.0);
+                    color += vec3f(0.0, 0.1, 0.1) * smoothstep(0.98, 1.0, scanline) * 0.1;
+                    
+                    // Simple "digital rain" particles simulation
+                    let rain = fract(sin(floor(uv.x * 50.0) * 123.456) + uv.y + t);
+                    color += vec3f(0.0, 1.0, 1.0) * smoothstep(0.99, 1.0, rain) * 0.1;
+                    
+                    // Vignette
+                    let dist = distance(uv, vec2f(0.5));
+                    color *= 1.0 - smoothstep(0.4, 0.8, dist);
+
+                    return vec4f(color, 1.0);
+                }
+            `
+        });
+
+        this.backgroundPipeline = this.device.createRenderPipeline({
+            label: 'Background Pipeline',
+            layout: 'auto',
+            vertex: {
+                module: shaderModule,
+                entryPoint: 'vs',
+            },
+            fragment: {
+                module: shaderModule,
+                entryPoint: 'fs',
+                targets: [{ format: this.format }]
+            },
+            primitive: { topology: 'triangle-strip' }
+        });
+
+        this.bgUniformBuffer = this.device.createBuffer({
+            size: 16, // vec2f + f32 + f32
+            usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+        });
+
+        this.bgBindGroup = this.device.createBindGroup({
+            layout: this.backgroundPipeline.getBindGroupLayout(0),
+            entries: [{ binding: 0, resource: { buffer: this.bgUniformBuffer } }]
         });
     }
 
@@ -258,6 +343,10 @@ export class WebGPURenderer {
         const commandEncoder = this.device.createCommandEncoder();
         const textureView = this.context.getCurrentTexture().createView();
 
+        // Update Background Uniforms
+        const currentTime = Date.now() - this.startTime;
+        this.device.queue.writeBuffer(this.bgUniformBuffer, 0, new Float32Array([canvasWidth, canvasHeight, currentTime, 0]));
+
         const renderPassDescriptor = {
             colorAttachments: [
                 {
@@ -270,6 +359,14 @@ export class WebGPURenderer {
         };
 
         const passEncoder = commandEncoder.beginRenderPass(renderPassDescriptor);
+
+        // Render Background
+        if (this.backgroundPipeline) {
+            passEncoder.setPipeline(this.backgroundPipeline);
+            passEncoder.setBindGroup(0, this.bgBindGroup);
+            passEncoder.draw(4);
+        }
+
         passEncoder.setPipeline(this.pipeline);
         passEncoder.setBindGroup(0, this.bindGroup);
         if (instanceCount > 0) {

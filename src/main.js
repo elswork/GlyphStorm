@@ -117,7 +117,7 @@ async function gameLoop(timestamp) {
     }
 
     const state = game.getState();
-    renderer.render(state);
+    renderer.render(state, timestamp);
 
     // Update UI
     document.getElementById('score').innerText = game.score;

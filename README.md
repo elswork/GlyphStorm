@@ -1,5 +1,9 @@
 # ⚡ GLYPHSTORM: Digital Orthography Defense
 
+> [!NOTE]
+> This code has been generated and refined with **🛸 Antigravity**, an advanced agentic AI coding assistant by Google DeepMind.
+
+
 **GlyphStorm** no es solo un juego de mecanografía; es un campo de batalla lingüístico impulsado por **WebGPU** e inteligencia artificial. En un futuro donde los datos se corrompen y las palabras son tu única arma, tu misión es purificar el flujo de información mediante la precisión gramatical.
 
 Domina el **Castellano** enfrentándote a tormentas de glifos que desafían tu conocimiento de las reglas ortográficas: tildes traicioneras, la dicotomía b/v, y la mística de la letra Ñ. Todo mientras una IA analiza cada una de tus pulsaciones en tiempo real para ajustar el caos a tu nivel de maestría.
@@ -85,3 +89,9 @@ To enable it on GitHub:
 -   Full integration of a trained LiteRT model for behavior classification.
 -   Enhanced particle effects and shaders.
 -   Online leaderboards.
+
+---
+
+## 🛸 Credits
+
+This project was built with **Antigravity**, an agentic AI designed for complex coding tasks by Google DeepMind.
